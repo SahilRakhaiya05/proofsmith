@@ -1,0 +1,9 @@
+trusted_associations: [OWNER, MEMBER, COLLABORATOR]
+shell_allowlist: [npm, npx, git]
+forbid_auto_merge: true
+forbid_issue_text_execution: true
+stop_on:
+  - secret_exposure
+  - unexpected_permission_increase
+  - repeated_failure_fingerprint
+  - exhausted_attempt_budget

@@ -1,0 +1,14 @@
+{
+  "projectId": "proj_replace_in_ci",
+  "type": "frontend",
+  "name": "Rollback preserves audit and dialog focus",
+  "description": "Proves destructive confirmation is accessible and rollback appends rather than erases history.",
+  "priority": "p1",
+  "planSteps": [
+    { "type": "action", "description": "Reach Deployed state as Release Manager" },
+    { "type": "action", "description": "Focus Roll back, open the named confirmation dialog, press Escape, and reopen it" },
+    { "type": "assertion", "description": "Assert Escape closes safely and focus returns to the Roll back control" },
+    { "type": "action", "description": "Confirm rollback" },
+    { "type": "assertion", "description": "Assert status is Rolled Back and all earlier audit events remain before one new deployment.rolled_back event" }
+  ]
+}

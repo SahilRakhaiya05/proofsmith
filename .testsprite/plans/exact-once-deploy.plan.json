@@ -1,0 +1,13 @@
+{
+  "projectId": "proj_replace_in_ci",
+  "type": "frontend",
+  "name": "Deployment happens exactly once",
+  "description": "Proves a rapid repeated deploy action cannot create duplicate deployment events.",
+  "priority": "p0",
+  "planSteps": [
+    { "type": "action", "description": "Reset ReleaseLab; complete risk checks; submit as Viewer; switch to Approver; approve and confirm" },
+    { "type": "action", "description": "Switch to Release Manager and activate Deploy twice rapidly" },
+    { "type": "assertion", "description": "Assert the control is disabled while Deploying" },
+    { "type": "assertion", "description": "Assert the final state is Deployed with exactly one deployment.started and one deployment.completed audit event" }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "projectId": "proj_replace_in_ci",
+  "type": "frontend",
+  "name": "Viewer cannot approve a release",
+  "description": "Proves the reported authorization bypass is rejected without changing state or audit history.",
+  "priority": "p0",
+  "planSteps": [
+    { "type": "action", "description": "Open the ReleaseLab section and activate Reset scenario" },
+    { "type": "action", "description": "Choose Viewer, mark Risk checks complete, and activate Submit" },
+    { "type": "action", "description": "Activate Approve, then confirm the approval dialog" },
+    { "type": "assertion", "description": "Assert the release status remains Awaiting Approval" },
+    { "type": "assertion", "description": "Assert feedback says Viewers cannot approve and no release.approved audit event exists" }
+  ]
+}

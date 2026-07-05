@@ -1,0 +1,9 @@
+version: 1
+mode: live
+default_branch: main
+human_approval_required: true
+max_build_attempts: 3
+max_repair_attempts: 3
+max_review_cycles: 2
+timeout_minutes: 45
+canonical_comment_title: Proofsmith Loop Contract
