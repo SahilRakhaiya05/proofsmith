@@ -1,0 +1,35 @@
+name: Proofsmith Loop
+on:
+  workflow_dispatch:
+    inputs:
+      run_id: { description: "Validated run ID", required: true, type: string }
+      issue_number: { description: "Issue number", required: true, type: string }
+      command: { description: "Authorized Proofsmith command", required: true, type: string }
+      actor: { description: "Authorized actor", required: true, type: string }
+concurrency:
+  group: proofsmith-${{ inputs.issue_number }}
+  cancel-in-progress: false
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  checks: write
+jobs:
+  validate-dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate bounded inputs
+        env:
+          RUN_ID: ${{ inputs.run_id }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          COMMAND: ${{ inputs.command }}
+        run: |
+          [[ "$RUN_ID" =~ ^ps_[A-Za-z0-9_-]+$ ]]
+          [[ "$ISSUE_NUMBER" =~ ^[0-9]+$ ]]
+          [[ "$COMMAND" =~ ^(plan|start|status|verify|repair|review|challenge|explain|replay|pause|resume|stop)$ ]]
+      - name: External worker gate
+        run: |
+          echo "Dispatch validated. The coding worker is intentionally disabled until a model provider and installation token are configured."
+          exit 1

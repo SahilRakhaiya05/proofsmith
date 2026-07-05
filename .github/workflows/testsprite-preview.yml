@@ -1,0 +1,56 @@
+name: TestSprite Preview Gate
+on:
+  workflow_dispatch:
+    inputs:
+      run_id: { required: true, type: string }
+      preview_url: { required: true, type: string }
+      expected_sha: { required: true, type: string }
+permissions:
+  contents: read
+  checks: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TESTSPRITE_API_KEY: ${{ secrets.TESTSPRITE_API_KEY }}
+      TESTSPRITE_PROJECT_ID: ${{ secrets.TESTSPRITE_PROJECT_ID }}
+      PREVIEW_URL: ${{ inputs.preview_url }}
+      RUN_ID: ${{ inputs.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --ignore-scripts
+      - name: Validate public target and credentials
+        run: |
+          test -n "$TESTSPRITE_API_KEY"
+          test -n "$TESTSPRITE_PROJECT_ID"
+          node -e "const u=new URL(process.env.PREVIEW_URL); if(u.protocol!=='https:' || /^(localhost|127\.|10\.|192\.168\.)/.test(u.hostname)) process.exit(1)"
+      - name: Configure and diagnose official CLI
+        run: |
+          npx testsprite setup --from-env --yes --agent codex
+          npx testsprite doctor
+      - name: Run broad ReleaseLab suite
+        shell: bash
+        run: |
+          mkdir -p evidence/testsprite/${RUN_ID}
+          failed=0
+          for source in .testsprite/plans/*.plan.json; do
+            name="$(basename "$source" .plan.json)"
+            target="/tmp/${name}.plan.json"
+            SOURCE="$source" TARGET="$target" node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync(process.env.SOURCE));p.projectId=process.env.TESTSPRITE_PROJECT_ID;fs.writeFileSync(process.env.TARGET,JSON.stringify(p,null,2))"
+            npx testsprite test lint --plan-from "$target"
+            set +e
+            npx testsprite test create --plan-from "$target" --run --wait --target-url "$PREVIEW_URL" --timeout 600 --idempotency-key "${RUN_ID}-${name}" --output json > "evidence/testsprite/${RUN_ID}/${name}.json"
+            code=$?
+            set -e
+            if [ "$code" -ne 0 ]; then failed=1; fi
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: testsprite-${{ inputs.run_id }}-${{ inputs.expected_sha }}
+          path: evidence/testsprite/${{ inputs.run_id }}
+          if-no-files-found: error

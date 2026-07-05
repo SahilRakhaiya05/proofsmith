@@ -1,0 +1,30 @@
+name: Proofsmith verified change
+description: Report observable behavior for a closed-loop repair
+title: "[Proofsmith] "
+labels: ["proofsmith:ready"]
+body:
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+      description: What happened, and where?
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: State the result that a verifier can observe.
+    validations: { required: true }
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Give the smallest deterministic sequence.
+    validations: { required: true }
+  - type: checkboxes
+    id: gate
+    attributes:
+      label: Human gate
+      options:
+        - label: I understand Proofsmith will not merge without human approval.
+          required: true

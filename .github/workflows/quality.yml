@@ -1,0 +1,24 @@
+name: Quality
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npm run build
+      - name: Secret scan
+        run: git grep -nE '(ghp_|github_pat_|sk-[A-Za-z0-9]{20,}|TESTSPRITE_API_KEY=.{8,})' -- ':!package-lock.json' && exit 1 || exit 0

@@ -1,0 +1,37 @@
+name: Production Verification
+on:
+  workflow_dispatch:
+    inputs:
+      run_id: { required: true, type: string }
+      production_url: { required: true, type: string }
+      expected_sha: { required: true, type: string }
+permissions:
+  contents: read
+  issues: write
+jobs:
+  verify-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: production
+    env:
+      TESTSPRITE_API_KEY: ${{ secrets.TESTSPRITE_API_KEY }}
+      CRITICAL_TEST_IDS: ${{ secrets.TESTSPRITE_CRITICAL_TEST_IDS }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --ignore-scripts
+      - name: Verify exact production target
+        env: { PRODUCTION_URL: "${{ inputs.production_url }}" }
+        run: node -e "const u=new URL(process.env.PRODUCTION_URL);if(u.protocol!=='https:')process.exit(1)"
+      - name: Configure TestSprite
+        run: |
+          test -n "$TESTSPRITE_API_KEY"
+          test -n "$CRITICAL_TEST_IDS"
+          npx testsprite setup --from-env --yes --agent codex
+          npx testsprite doctor
+      - name: Rerun banked critical scenarios
+        shell: bash
+        run: |
+          IFS=',' read -ra ids <<< "$CRITICAL_TEST_IDS"
+          for id in "${ids[@]}"; do npx testsprite test rerun "$id" --wait --timeout 600 --output json; done
