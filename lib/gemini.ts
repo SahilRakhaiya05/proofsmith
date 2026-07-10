@@ -1,5 +1,6 @@
 /**
  * Google Gemini client for Proofsmith maker/reviewer agents.
+ * Model selection is server-side only — the browser never chooses or lists models.
  * Secrets stay in env — never returned to the browser.
  */
 
@@ -7,16 +8,20 @@ const GEMINI_BASE = (
   process.env.GEMINI_API_BASE || "https://generativelanguage.googleapis.com/v1beta"
 ).replace(/\/$/, "");
 
-/** Preference order for coding / agent work (highest first). */
+/**
+ * Ranked preference for coding / agent work (highest first).
+ * Tuned for Proofsmith maker/reviewer: deep reasoning + code, not TTS/image/embed.
+ */
 const MODEL_PREFERENCE = [
   "gemini-3.1-pro-preview",
-  "gemini-3-pro-preview",
   "gemini-3.1-pro",
+  "gemini-3-pro-preview",
   "gemini-3-pro",
   "gemini-2.5-pro",
   "gemini-pro-latest",
   "gemini-2.5-flash",
   "gemini-3-flash-preview",
+  "gemini-3.1-flash-lite",
   "gemini-2.0-flash",
   "gemini-2.0-pro",
   "gemini-1.5-pro",
@@ -59,6 +64,10 @@ function shortName(full: string) {
   return full.replace(/^models\//, "");
 }
 
+function isCodingModel(name: string) {
+  return !/tts|image|embed|aqa|gecko|vision|robotics|computer-use/i.test(name);
+}
+
 export async function listGeminiModels(): Promise<{
   ok: boolean;
   status: number;
@@ -98,29 +107,58 @@ export async function listGeminiModels(): Promise<{
   }
 }
 
+/** Score a model for Proofsmith coding agents (higher = better). */
+export function scoreModelForProofsmith(model: GeminiModelInfo): number {
+  const name = model.name;
+  if (!isCodingModel(name)) return -1000;
+
+  const methods = model.supportedGenerationMethods || [];
+  if (methods.length && !methods.includes("generateContent")) return -1000;
+
+  let score = 0;
+  const prefIndex = MODEL_PREFERENCE.findIndex(
+    (preferred) => name === preferred || name.startsWith(`${preferred}-`),
+  );
+  if (prefIndex >= 0) score += 10_000 - prefIndex * 100;
+
+  if (/3\.1.*pro/i.test(name)) score += 900;
+  else if (/3.*pro/i.test(name)) score += 800;
+  else if (/2\.5.*pro/i.test(name)) score += 700;
+  else if (/pro/i.test(name)) score += 500;
+  else if (/2\.5.*flash/i.test(name)) score += 400;
+  else if (/flash/i.test(name)) score += 200;
+
+  if (/preview/i.test(name) && /pro/i.test(name)) score += 50;
+  if (/lite/i.test(name)) score -= 120;
+
+  // Prefer large context for contracts + failure bundles
+  if ((model.inputTokenLimit || 0) >= 1_000_000) score += 80;
+  else if ((model.inputTokenLimit || 0) >= 200_000) score += 40;
+
+  return score;
+}
+
 export function pickBestModel(models: GeminiModelInfo[]): string {
   const envOverride = process.env.GEMINI_MODEL?.trim();
   if (envOverride) return envOverride.replace(/^models\//, "");
 
-  const generatable = models.filter((model) => {
-    const methods = model.supportedGenerationMethods || [];
-    return methods.length === 0 || methods.includes("generateContent");
-  });
+  const ranked = models
+    .map((model) => ({ model, score: scoreModelForProofsmith(model) }))
+    .filter((row) => row.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (ranked[0]) return ranked[0].model.name;
 
   for (const preferred of MODEL_PREFERENCE) {
-    const hit = generatable.find(
-      (model) => model.name === preferred || model.name.startsWith(`${preferred}-`),
+    const hit = models.find(
+      (model) =>
+        isCodingModel(model.name) &&
+        (model.name === preferred || model.name.startsWith(`${preferred}-`)),
     );
     if (hit) return hit.name;
   }
 
-  // Prefer names containing "pro", then "flash"
-  const pro = generatable.find((model) => /2\.5.*pro|pro/i.test(model.name) && !/tts|image|embed/i.test(model.name));
-  if (pro) return pro.name;
-  const flash = generatable.find((model) => /flash/i.test(model.name) && !/tts|image|embed/i.test(model.name));
-  if (flash) return flash.name;
-
-  return generatable[0]?.name || MODEL_PREFERENCE[0];
+  return MODEL_PREFERENCE.find((name) => name.includes("2.5-pro")) || "gemini-2.5-pro";
 }
 
 export async function resolveBestModel() {
@@ -129,19 +167,26 @@ export async function resolveBestModel() {
     return {
       ok: listed.ok,
       status: listed.status,
-      model: process.env.GEMINI_MODEL || MODEL_PREFERENCE[0],
+      model: process.env.GEMINI_MODEL || "gemini-2.5-pro",
       models: listed.models,
       error: listed.error,
       source: "fallback" as const,
+      reason: listed.ok
+        ? "empty model catalog — using stable fallback"
+        : "listModels failed — using stable fallback",
     };
   }
   const model = pickBestModel(listed.models);
+  const winner = listed.models.find((item) => item.name === model);
   return {
     ok: true,
     status: listed.status,
     model,
     models: listed.models,
     source: "api" as const,
+    reason: process.env.GEMINI_MODEL
+      ? "GEMINI_MODEL env override"
+      : `auto-ranked for coding agents (score ${winner ? scoreModelForProofsmith(winner) : "n/a"})`,
   };
 }
 
@@ -152,16 +197,21 @@ export type GenerateResult = {
   text: string;
   raw?: unknown;
   error?: unknown;
+  selection?: string;
 };
 
 export async function generateContent(options: {
   prompt: string;
   system?: string;
+  /** Ignored unless ALLOW_CLIENT_MODEL=1 — server always auto-picks best. */
   model?: string;
   temperature?: number;
   maxOutputTokens?: number;
 }): Promise<GenerateResult> {
-  const resolved = options.model || (await resolveBestModel()).model;
+  const allowClient = process.env.ALLOW_CLIENT_MODEL === "1";
+  const resolved = allowClient && options.model
+    ? options.model
+    : (await resolveBestModel()).model;
   const model = resolved.replace(/^models\//, "");
   const body = {
     systemInstruction: options.system
@@ -188,10 +238,25 @@ export async function generateContent(options: {
     });
     const raw = await response.json();
     if (!response.ok) {
-      return { ok: false, status: response.status, model, text: "", raw, error: raw };
+      return {
+        ok: false,
+        status: response.status,
+        model,
+        text: "",
+        raw,
+        error: raw,
+        selection: "server-auto",
+      };
     }
     const text = extractText(raw);
-    return { ok: Boolean(text), status: response.status, model, text, raw };
+    return {
+      ok: Boolean(text),
+      status: response.status,
+      model,
+      text,
+      raw,
+      selection: "server-auto",
+    };
   } catch (error) {
     return {
       ok: false,
@@ -199,6 +264,7 @@ export async function generateContent(options: {
       model,
       text: "",
       error: error instanceof Error ? error.message : "generate_failed",
+      selection: "server-auto",
     };
   }
 }

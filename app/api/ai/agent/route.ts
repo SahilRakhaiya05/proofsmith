@@ -11,10 +11,18 @@ import { getAgent } from "@/lib/agents-catalog";
 
 export const runtime = "nodejs";
 
+const MessageSchema = z.object({
+  role: z.enum(["user", "assistant", "system"]),
+  content: z.string().min(1).max(20_000),
+});
+
 const BodySchema = z.object({
   role: z.enum(["triage", "maker", "reviewer"]).default("maker"),
   agentId: z.string().optional(),
-  prompt: z.string().min(8).max(20_000),
+  /** Single-turn prompt (legacy). Prefer `messages` for chat UI. */
+  prompt: z.string().min(1).max(20_000).optional(),
+  /** Multi-turn history. */
+  messages: z.array(MessageSchema).max(40).optional(),
   context: z
     .object({
       issueTitle: z.string().optional(),
@@ -26,6 +34,7 @@ const BodySchema = z.object({
       appUrl: z.string().optional(),
     })
     .optional(),
+  /** Ignored — model is always chosen server-side. */
   model: z.string().optional(),
   temperature: z.number().min(0).max(1).optional(),
 });
@@ -36,9 +45,30 @@ function systemFor(role: "triage" | "maker" | "reviewer") {
   return MAKER_SYSTEM;
 }
 
+function buildPromptFromMessages(
+  messages: z.infer<typeof MessageSchema>[],
+  fallbackPrompt?: string,
+) {
+  if (messages.length) {
+    return messages
+      .map((m) => {
+        const tag = m.role === "user" ? "User" : m.role === "assistant" ? "Assistant" : "System";
+        return `${tag}:\n${m.content}`;
+      })
+      .join("\n\n");
+  }
+  return fallbackPrompt || "";
+}
+
 export async function POST(request: Request) {
   if (!geminiConfigured()) {
-    return Response.json({ error: "gemini_not_configured" }, { status: 503 });
+    return Response.json(
+      {
+        error: "gemini_not_configured",
+        message: "Set GEMINI_API_KEY in .env.local or Vercel env, then restart/redeploy.",
+      },
+      { status: 503 },
+    );
   }
 
   let json: unknown;
@@ -53,9 +83,15 @@ export async function POST(request: Request) {
     return Response.json({ error: "invalid_body", issues: parsed.error.issues }, { status: 400 });
   }
 
-  const { role, prompt, context, model, temperature, agentId } = parsed.data;
+  // Client-supplied `model` is intentionally ignored.
+  const { role, prompt, messages, context, temperature, agentId } = parsed.data;
+  const chatPrompt = buildPromptFromMessages(messages || [], prompt);
+  if (chatPrompt.length < 4) {
+    return Response.json({ error: "empty_prompt" }, { status: 400 });
+  }
+
   const agent = agentId ? getAgent(agentId) : null;
-  const resolved = model || (await resolveBestModel()).model;
+  const resolved = await resolveBestModel();
 
   const contextBlock = context
     ? [
@@ -74,8 +110,8 @@ export async function POST(request: Request) {
   const fullPrompt = [
     agent ? `Acting as catalog agent ${agent.id} (${agent.name} / ${agent.role}).` : null,
     contextBlock || null,
-    "---",
-    prompt,
+    "--- Conversation ---",
+    chatPrompt,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -83,7 +119,6 @@ export async function POST(request: Request) {
   const result = await generateContent({
     prompt: fullPrompt,
     system: systemFor(role),
-    model: resolved,
     temperature,
   });
 
@@ -93,11 +128,14 @@ export async function POST(request: Request) {
       role,
       agentId: agent?.id || null,
       model: result.model,
+      selection: "server-auto",
+      selectionReason: resolved.reason,
       text: result.text,
       status: result.status,
       error: result.ok ? undefined : result.error,
       canApproveMerge: false,
       checkerNext: "Run TestSprite CLI against the live APP_URL and bank the verdict in LOOP.md",
+      turn: messages?.filter((m) => m.role === "user").length || (prompt ? 1 : 0),
     },
     {
       status: result.ok ? 200 : result.status || 502,

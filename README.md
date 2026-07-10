@@ -20,7 +20,10 @@ Proofsmith is a GitHub-native **maker → checker → fix → verify-again** loo
 | **Repo** | https://github.com/SahilRakhaiya05/proofsmith |
 | **Live URL** | `https://<your-vercel-project>.vercel.app` ← set after deploy + paste here |
 | **Loop log** | [LOOP.md](./LOOP.md) (agent-written, one line per iteration) |
-| **AI console** | `/ai` |
+| **Submission pack** | [SUBMISSION.md](./SUBMISSION.md) · in-app `/submit` |
+| **One-click launch** | `/launch` |
+| **Security scorecard** | `/security` |
+| **AI console** | `/ai` (server auto-picks best Gemini — **no model list UI**) |
 | **Dashboard** | `/dashboard` |
 | **Health** | `/api/health` |
 
@@ -49,7 +52,7 @@ E2B_API_KEY=...                    # optional sandboxes
 ```
 
 Aliases for Gemini: `GOOGLE_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, `MODEL_PROVIDER_API_KEY`.  
-Optional `GEMINI_MODEL` overrides auto-pick (API prefers `gemini-3.1-pro-preview` → `gemini-2.5-pro` …).
+Optional `GEMINI_MODEL` hard-pins server selection. Otherwise the **server ranks** coding models (excludes TTS/image/embed) and runs only the winner — the browser never shows a model catalog or lets users pick.
 
 **GitHub OAuth callback:**  
 `https://YOUR-APP.vercel.app/api/auth/github/callback`

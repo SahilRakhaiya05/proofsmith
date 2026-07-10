@@ -1,50 +1,37 @@
-import { geminiConfigured, listGeminiModels, pickBestModel, resolveBestModel } from "@/lib/gemini";
+import { geminiConfigured, resolveBestModel } from "@/lib/gemini";
 
 export const runtime = "nodejs";
 
+/**
+ * Public status only. Does NOT expose the full model catalog.
+ * Best model is chosen server-side; clients just learn whether AI is ready.
+ */
 export async function GET() {
   if (!geminiConfigured()) {
     return Response.json(
       {
         configured: false,
         ok: false,
-        message: "Set GEMINI_API_KEY (or GOOGLE_API_KEY / MODEL_PROVIDER_API_KEY)",
-        preferredOrder: [
-          "gemini-2.5-pro",
-          "gemini-2.5-flash",
-          "gemini-2.0-flash",
-          "gemini-1.5-pro",
-        ],
+        ready: false,
+        selection: "server-auto",
+        message: "Set GEMINI_API_KEY on the host (never in the browser).",
       },
-      { status: 503 },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
     );
   }
 
   const resolved = await resolveBestModel();
-  const listed = await listGeminiModels();
-  const best = listed.ok ? pickBestModel(listed.models) : resolved.model;
 
   return Response.json(
     {
       configured: true,
-      ok: listed.ok,
-      status: listed.status,
-      bestModel: best,
+      ok: resolved.ok,
+      ready: resolved.ok || Boolean(resolved.model),
+      selection: "server-auto",
+      // Single selected model only — no catalog list for clients to pick from.
+      model: resolved.model,
+      reason: resolved.reason,
       source: resolved.source,
-      override: process.env.GEMINI_MODEL || null,
-      models: listed.models
-        .filter((model) => {
-          const methods = model.supportedGenerationMethods || [];
-          return methods.length === 0 || methods.includes("generateContent");
-        })
-        .slice(0, 40)
-        .map((model) => ({
-          name: model.name,
-          displayName: model.displayName,
-          inputTokenLimit: model.inputTokenLimit,
-          outputTokenLimit: model.outputTokenLimit,
-        })),
-      error: listed.error,
     },
     { headers: { "Cache-Control": "no-store" } },
   );

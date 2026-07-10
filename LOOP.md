@@ -43,6 +43,8 @@ Agent-written loop log for **Proofsmith** (`SahilRakhaiya05/proofsmith`).
 
 - Iteration 08 — **Maker** perfected env surface (`.env.example`, `/api/health` requiredMissing, Settings checklist), dashboard Gemini card, agent catalog entries for Gemini Orchestrator, and expanded submission docs; local **vitest + next build** must stay green before push; next **Checker** action is TestSprite against the Vercel URL after env is set; status **ENV-SURFACE-COMPLETE / AWAITING-LIVE-TESTSPRITE-BANK**.
 
+- Iteration 09 — **Maker** closed competitive gaps vs Season 3 field (LoopLens / Ouroboros / LoopLedger / NEXUS-style entries): (1) Gemini model catalog **removed from the client** — `/api/ai/models` returns only server-auto selection, ranking prefers `gemini-3.1-pro-preview` → `gemini-2.5-pro` and excludes TTS/image/embed; (2) **one-click pre-launch** at `/launch` + `/api/launch`; (3) **pre-launch security scorecard** at `/security` + `/api/security/scorecard` (grade A–F, critical gates, no secret leakage); (4) judge pack `/submit` + `SUBMISSION.md` with Discord paste; local unit tests for scorecard + model ranking; status **SUBMISSION-PACK-GREEN / LIVE-TESTSPRITE-STILL-PENDING**.
+
 ---
 
 ## Environment map (no secret values)
@@ -109,4 +111,4 @@ On **green**: append Iteration 09 with run id + commit SHA + pass — that is th
 
 ---
 
-*Last agent update: Iteration 08 — Gemini maker + env surface + long-form submission log.*
+*Last agent update: Iteration 09 — server-auto Gemini, security scorecard, one-click launch, submission pack.*

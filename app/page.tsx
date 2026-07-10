@@ -54,9 +54,9 @@ export default function Home() {
             <h1 id="hero-title">Issue in.<br /><em>Verified</em> PR out.</h1>
             <p className="dek">The coding agent does not stop when the code looks finished. It stops when independent evidence proves the issue is resolved.</p>
             <div className="hero-actions">
-              <a className="primary-cta" href="/dashboard">Open dashboard <span>→</span></a>
-              <a className="secondary-cta" href="/ai">Run Gemini agent</a>
-              <a className="secondary-cta" href="/loop">Four steps</a>
+              <a className="primary-cta" href="/launch">One-click launch <span>→</span></a>
+              <a className="secondary-cta" href="/security">Security score</a>
+              <a className="secondary-cta" href="/ai">Gemini agent</a>
             </div>
           </div>
           <div className="forge" aria-label="Proofsmith closes the engineering loop">
