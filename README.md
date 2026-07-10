@@ -8,13 +8,23 @@ Proofsmith is a GitHub-native autonomous engineering loop that converts an issue
 
 ## Live application and real evidence
 
-- Live application: https://proofsmith-loop-theater.fxcore120.chatgpt.site (private Sites deployment)
-- Real demo issue: pending GitHub repository installation
-- Verified pull request: pending first external loop
-- Loop Theater: https://proofsmith-loop-theater.fxcore120.chatgpt.site/#story (simulation-only)
-- Demo video: pending a genuine complete run
+- Product UI: `/` (marketing + Loop Theater fixture), `/dashboard`, `/loops`, `/agents`, `/integrations`, `/settings`
+- GitHub OAuth: `/api/auth/github` → callback `/api/auth/github/callback`
+- Health (config flags only): `/api/health`
+- TestSprite probe: `/api/testsprite/status` ([official CLI](https://github.com/TestSprite/testsprite-cli))
+- E2B probe: `/api/e2b/status`
+- Signed webhook: `/api/github/webhook`
 
-These links stay pending until the underlying artifacts exist. Proofsmith never substitutes fixtures for evidence.
+### Deploy on Vercel (recommended)
+
+1. Import `SahilRakhaiya05/proofsmith` into Vercel.
+2. Set env vars from `.env.example` in the Vercel project (never commit real secrets).
+3. Set `APP_URL` to `https://<your-deployment>.vercel.app` (no trailing slash).
+4. In GitHub OAuth App settings, set Authorization callback URL to  
+   `https://<your-deployment>.vercel.app/api/auth/github/callback`.
+5. Redeploy. Open `/dashboard` and **Connect GitHub**.
+
+Proofsmith never substitutes fixtures for hackathon evidence. Loop Theater remains a labelled simulation until a real issue→TestSprite→production artifact chain exists.
 
 ## One-minute explanation
 

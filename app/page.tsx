@@ -33,10 +33,16 @@ export default function Home() {
   return (
     <>
       <a className="skip-link" href="#story">Skip to loop story</a>
-      <div className="simulation-banner" role="note"><span>SIMULATION</span> Product shell only. No GitHub, TestSprite, preview, or production result shown here is claimed as verified.</div>
+      <div className="simulation-banner" role="note"><span>LIVE + FIXTURE</span> Loop Theater below is labelled simulation. Dashboard, GitHub OAuth, TestSprite, and E2B use real integrations when secrets are set.</div>
       <header className="site-header">
         <a className="wordmark" href="#top" aria-label="Proofsmith home"><span className="brand-mark">P</span><span>PROOFSMITH</span></a>
-        <nav aria-label="Primary navigation"><a href="#story">Loop theater</a><a href="#release-lab">ReleaseLab</a><a href="/integrations">Integrations</a></nav>
+        <nav aria-label="Primary navigation">
+          <a href="/dashboard">Dashboard</a>
+          <a href="/loops">Loops</a>
+          <a href="/agents">Agents</a>
+          <a href="#story">Theater</a>
+          <a href="/integrations">Integrations</a>
+        </nav>
         <div className="header-auth"><GitHubIdentity /></div>
       </header>
 
@@ -46,7 +52,11 @@ export default function Home() {
             <p className="eyebrow"><span className="signal-dot" /> GitHub-native autonomous engineering</p>
             <h1 id="hero-title">Issue in.<br /><em>Verified</em> PR out.</h1>
             <p className="dek">The coding agent does not stop when the code looks finished. It stops when independent evidence proves the issue is resolved.</p>
-            <div className="hero-actions"><a className="primary-cta" href="#story">Enter the loop <span>↓</span></a><a className="secondary-cta" href="#release-lab">Test ReleaseLab</a></div>
+            <div className="hero-actions">
+              <a className="primary-cta" href="/dashboard">Open dashboard <span>→</span></a>
+              <a className="secondary-cta" href="/api/auth/github">Connect GitHub</a>
+              <a className="secondary-cta" href="#story">Loop theater</a>
+            </div>
           </div>
           <div className="forge" aria-label="Proofsmith closes the engineering loop">
             <div className="forge-label top">HUMAN ISSUE <span>01</span></div>

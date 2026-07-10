@@ -6,10 +6,15 @@ const sans = Manrope({ variable: "--font-sans", subsets: ["latin"] });
 const mono = IBM_Plex_Mono({ variable: "--font-mono", subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.PROOFSMITH_PRODUCTION_URL || "https://proofsmith-loop-theater.fxcore120.chatgpt.site"),
+  metadataBase: new URL(
+    process.env.APP_URL ||
+      process.env.PROOFSMITH_PRODUCTION_URL ||
+      "https://proofsmith.vercel.app",
+  ),
   title: "Proofsmith — Issue in. Verified PR out.",
-  description: "A GitHub-native autonomous engineering loop that stops only when independent evidence proves the issue is resolved.",
-  icons: { icon: "/favicon.ico" },
+  description:
+    "A GitHub-native autonomous engineering loop that stops only when independent evidence proves the issue is resolved.",
+  icons: { icon: "/favicon.svg" },
   openGraph: {
     title: "Proofsmith — Issue in. Verified PR out.",
     description: "Independent evidence closes the engineering loop.",
