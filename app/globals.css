@@ -175,6 +175,9 @@ footer{display:flex;align-items:center;justify-content:space-between;padding:2re
 .submit-grid h3{margin:.5rem 0;font-size:20px;letter-spacing:-.03em}
 .submit-grid p{margin:0;color:var(--muted);line-height:1.55;font-size:14px}
 .span-full{grid-column:1 / -1}
+.block-label{display:flex;flex-direction:column;gap:.45rem;font:600 10px var(--font-mono);text-transform:uppercase}
+.agent-textarea{width:100%;border:1px solid var(--ink);background:#fff;padding:.9rem 1rem;font:500 14px/1.5 var(--font-sans);resize:vertical;min-height:160px}
+.agent-out{margin-top:1rem;max-height:480px;white-space:pre-wrap}
 @media(max-width:1000px){.metric-grid{grid-template-columns:1fr 1fr}.panel-grid,.agent-grid,.loops-layout,.four-grid,.role-split,.onboard-grid,.submit-grid{grid-template-columns:1fr}.panel.span-2,.span-full{grid-column:auto}.app-page-head{flex-direction:column;align-items:start}}
 @media(max-width:600px){.metric-grid{grid-template-columns:1fr}.app-main{padding:1.5rem 1rem 4rem}.agent-meta{grid-template-columns:1fr}.kv{grid-template-columns:1fr}.four-steps-home{padding:5rem 1.2rem}}
 

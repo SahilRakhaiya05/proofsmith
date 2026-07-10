@@ -38,10 +38,10 @@ export default function Home() {
         <a className="wordmark" href="#top" aria-label="Proofsmith home"><span className="brand-mark">P</span><span>PROOFSMITH</span></a>
         <nav aria-label="Primary navigation">
           <a href="/dashboard">Dashboard</a>
+          <a href="/ai">AI · Gemini</a>
           <a href="/loop">Four steps</a>
           <a href="/loops">Runs</a>
           <a href="/agents">Agents</a>
-          <a href="#story">Theater</a>
           <a href="/integrations">Integrations</a>
         </nav>
         <div className="header-auth"><GitHubIdentity /></div>
@@ -55,8 +55,8 @@ export default function Home() {
             <p className="dek">The coding agent does not stop when the code looks finished. It stops when independent evidence proves the issue is resolved.</p>
             <div className="hero-actions">
               <a className="primary-cta" href="/dashboard">Open dashboard <span>→</span></a>
+              <a className="secondary-cta" href="/ai">Run Gemini agent</a>
               <a className="secondary-cta" href="/loop">Four steps</a>
-              <a className="secondary-cta" href="/api/auth/github">Connect GitHub</a>
             </div>
           </div>
           <div className="forge" aria-label="Proofsmith closes the engineering loop">

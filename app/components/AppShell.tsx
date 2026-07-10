@@ -6,6 +6,7 @@ import { GitHubIdentity } from "@/app/GitHubIdentity";
 
 const links = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/ai", label: "AI · Gemini" },
   { href: "/loop", label: "Four steps" },
   { href: "/loops", label: "Runs" },
   { href: "/agents", label: "Agents" },

@@ -30,6 +30,13 @@ type Summary = {
     plans: Array<{ name: string; file: string; priority: string }>;
   };
   e2b: { configured: boolean; ok: boolean; endpoint: string | null };
+  gemini?: {
+    configured: boolean;
+    ok: boolean;
+    bestModel: string | null;
+    modelCount: number;
+    source: string;
+  };
   agents: { total: number; ready: number; gated: number };
   loops: {
     total: number;
@@ -129,7 +136,7 @@ export default function DashboardPage() {
               <Pill ok={summary.integrations.githubOAuth} label={summary.integrations.githubOAuth ? "configured" : "missing secrets"} />
             </article>
             <article className="metric-card">
-              <span className="muted">TestSprite</span>
+              <span className="muted">TestSprite checker</span>
               <strong>{summary.testsprite.ok ? "API reachable" : summary.testsprite.configured ? "Probe failed" : "Not configured"}</strong>
               <Pill ok={summary.testsprite.ok} label={summary.testsprite.configured ? `HTTP ${summary.testsprite.status}` : "no key"} />
             </article>
@@ -139,13 +146,15 @@ export default function DashboardPage() {
               <Pill ok={summary.e2b.ok} label={summary.e2b.configured ? "key set" : "no key"} />
             </article>
             <article className="metric-card">
-              <span className="muted">Agents / loops</span>
-              <strong>
-                {summary.agents.ready}/{summary.agents.total} ready · {summary.loops.total} runs
-              </strong>
-              <Pill ok={summary.agents.ready > 0} label={`${summary.agents.gated} gated`} />
+              <span className="muted">Gemini maker</span>
+              <strong>{summary.gemini?.bestModel || (summary.integrations.gemini ? "resolving…" : "Not configured")}</strong>
+              <Pill ok={Boolean(summary.gemini?.ok)} label={summary.gemini?.configured ? `${summary.gemini.modelCount} models` : "no key"} />
             </article>
           </section>
+          <p className="panel-note" style={{ marginBottom: "1rem" }}>
+            Agents ready {summary.agents.ready}/{summary.agents.total} · loop runs {summary.loops.total} ·{" "}
+            <a href="/ai">Open Gemini console →</a>
+          </p>
 
           <section className="panel-grid">
             <div className="panel">
