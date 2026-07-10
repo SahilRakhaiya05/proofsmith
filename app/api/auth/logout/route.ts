@@ -1,8 +1,12 @@
 import { cookie } from "@/lib/github-session";
+import { publicAppUrl } from "@/lib/config";
+
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const origin = new URL(request.url).origin;
-  const response = Response.json({ authenticated: false });
-  response.headers.append("Set-Cookie", cookie("ps_session", "", { maxAge: 0, secure: origin.startsWith("https:") }));
-  return response;
+  const appUrl = publicAppUrl(request);
+  const secure = appUrl.startsWith("https:");
+  const headers = new Headers({ "Content-Type": "application/json", "Cache-Control": "no-store" });
+  headers.append("Set-Cookie", cookie("ps_session", "", { maxAge: 0, secure }));
+  return new Response(JSON.stringify({ authenticated: false }), { status: 200, headers });
 }
