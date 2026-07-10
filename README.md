@@ -1,98 +1,133 @@
 # Proofsmith
 
-Issue in. Verified PR out.
+**Issue in. Verified PR out.**
 
-Proofsmith is a GitHub-native autonomous engineering loop that converts an issue into a human-reviewed, TestSprite-verified pull request and confirms the fix again in production.
+Proofsmith is a GitHub-native autonomous engineering loop: a **Maker** (coding agent) ships code, an independent **Checker** ([TestSprite CLI](https://github.com/TestSprite/testsprite-cli)) runs real tests against the **live** app, the Maker fixes from the failure bundle, and the Checker verifies again until the pass banks.
 
-> Truth status: this repository currently contains a working local product shell, ReleaseLab reference application, loop state machine, signed webhook boundary, tests, and guarded workflow templates. It does **not** yet contain a genuine GitHub issue-to-production run, TestSprite result, public GitHub App installation, human review, or production verification. The Loop Theater fixture is visibly labelled Simulation.
+> A loop with no real checker doesn't fail loudly. It hallucinates progress.
 
-## Live application and real evidence
+## Live app
 
-- Product UI: `/` (marketing + Loop Theater fixture), `/dashboard`, `/loops`, `/agents`, `/integrations`, `/settings`
-- GitHub OAuth: `/api/auth/github` → callback `/api/auth/github/callback`
-- Health (config flags only): `/api/health`
-- TestSprite probe: `/api/testsprite/status` ([official CLI](https://github.com/TestSprite/testsprite-cli))
-- E2B probe: `/api/e2b/status`
-- Signed webhook: `/api/github/webhook`
+| | |
+|--|--|
+| **Repository** | https://github.com/SahilRakhaiya05/proofsmith |
+| **Live URL** | Set after Vercel deploy → `https://<your-project>.vercel.app` (put the real URL here once deploy succeeds) |
+| **Loop log** | [LOOP.md](./LOOP.md) — agent-written, one line per iteration |
+| **Health** | `/api/health` |
+| **Dashboard** | `/dashboard` |
+| **Four steps** | `/loop` |
 
-### Deploy on Vercel (recommended)
+After Vercel is green, update this section with the exact production URL and set `APP_URL` to the same value.
 
-1. Import `SahilRakhaiya05/proofsmith` into Vercel.
-2. Set env vars from `.env.example` in the Vercel project (never commit real secrets).
-3. Set `APP_URL` to `https://<your-deployment>.vercel.app` (no trailing slash).
-4. In GitHub OAuth App settings, set Authorization callback URL to  
-   `https://<your-deployment>.vercel.app/api/auth/github/callback`.
-5. Redeploy. Open `/dashboard` and **Connect GitHub**.
+## Four steps · one repeats
 
-Proofsmith never substitutes fixtures for hackathon evidence. Loop Theater remains a labelled simulation until a real issue→TestSprite→production artifact chain exists.
+| Step | Role | What happens |
+|------|------|----------------|
+| **01 Write** | Maker | Coding agent ships code (Claude Code, Codex, etc.) |
+| **02 Verify** | Checker | TestSprite CLI tests the **live** app URL |
+| **03 Fix** | Maker | Agent reads the failure bundle and fixes root cause |
+| **04 Verify again** | Checker | Rerun · pass banks · back to the top |
 
-## One-minute explanation
+Install checker skill for your agent:
 
-Most coding agents stop after producing code or opening a pull request. Proofsmith turns each issue into a falsifiable contract, lets a bounded maker implement the smallest correction, and requires separate local, preview, TestSprite, review, shadow-mutation, human, and production gates. Evidence is valid only for the exact commit it tested.
+```bash
+npm i -g @testsprite/testsprite-cli
+testsprite setup          # API key + agent skill
+# point tests at your deployed APP_URL — not localhost
+```
 
-## How the loop works
+Docs: https://github.com/TestSprite/testsprite-cli
 
-`issue → contract → isolated build → local checks → preview → TestSprite → repair → independent review → shadow challenge → human approval → production verification → memory`
+## Product surfaces
 
-The strict transition table lives in `packages/loop-state`. `BUILDING → SUCCESS` is illegal by construction.
+- `/` — marketing + four-step overview + Loop Theater (labelled fixture)
+- `/loop` — maker/checker guide + submit checklist
+- `/dashboard` — live GitHub, TestSprite, E2B, runs
+- `/loops` — run ledger · start from real GitHub issues
+- `/agents` — 10 bounded agents (none may merge)
+- `/integrations` · `/settings` — wire secrets without exposing them
 
-## GitHub-native interaction
+### API
 
-The signed webhook endpoint is `/api/github/webhook`. It validates payload size, HMAC signature, delivery ID, supported event, command grammar, and trusted author association before it contacts GitHub. It maintains a single contract comment and dispatches the guarded workflow for `/proofsmith start`.
+- GitHub OAuth: `/api/auth/github` → `/api/auth/github/callback`
+- Repos / issues (session): `/api/github/repos`, `/api/github/issues`
+- Webhook: `/api/github/webhook`
+- TestSprite: `/api/testsprite/status|projects|tests|run`
+- E2B: `/api/e2b/status`, `POST /api/e2b/sandbox`
+- Dashboard summary: `/api/dashboard/summary`
 
-Supported parser commands include `plan`, `start`, `status`, `verify`, `repair`, `review`, `challenge`, `explain`, `replay`, `pause`, `resume`, `stop`, `resolve-comments`, `fix-ci`, `fix-conflicts`, and `release`. Workflows enable only the commands they implement.
+## Deploy on Vercel (required)
 
-The web app also implements GitHub OAuth with state validation and an AES-GCM encrypted, HttpOnly session. Set the OAuth callback to `https://proofsmith-loop-theater.fxcore120.chatgpt.site/api/auth/github/callback`. GitHub recommends GitHub Apps over OAuth apps for repository automation; OAuth here identifies the human, while the GitHub App remains the intended worker boundary.
+**Important:** Vercel must build commit **`main` HEAD**, not old `6eee85d`.  
+Default build is **`next build`** (not `vinext build`).
 
-## Maker/checker separation and TestSprite
+1. Import `SahilRakhaiya05/proofsmith` · branch `main`.
+2. Framework: **Next.js**. Build command: `npm run build` (already in `vercel.json`).
+3. Node: **22.x** (see `.nvmrc` / `package.json` engines).
+4. Env vars (Project → Settings → Environment Variables):
 
-The maker may propose changes but cannot transition the run to success, approve its own PR, or bank verified memory. TestSprite is the independent user-visible checker. The repository pins the official CLI, installs its Codex verification guidance, validates three broad ReleaseLab plans offline, and includes real preview and production invocations. A live run still requires a rotated `TESTSPRITE_API_KEY` and project ID in GitHub Actions secrets.
+```
+APP_URL=https://YOUR-APP.vercel.app
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+SESSION_SECRET=
+TESTSPRITE_API_KEY=
+TESTSPRITE_PROJECT_ID=
+E2B_API_KEY=
+```
 
-## Shadow mutation challenge
+5. GitHub OAuth App callback:  
+   `https://YOUR-APP.vercel.app/api/auth/github/callback`
+6. Redeploy **without** build cache if an old vinext failure is cached.
 
-A completed live implementation will apply a temporary isolated mutation that reintroduces the original defect. The relevant verifier must fail, the corrected branch must be restored, and the verifier must pass again. The current repository contains the policy and UI slot, not a claimed mutation result.
+Local:
+
+```bash
+npm ci
+npm test
+npm run build
+npm run dev
+```
+
+## How to submit
+
+### 01 // In your GitHub repo
+
+- Source on `main`
+- Agent-written [LOOP.md](./LOOP.md) (one plain-English line per iteration)
+- This README with app description + **live URL**
+
+Judges read LOOP.md first. It is backed by commit history + platform run history.
+
+### 02 // Discord entry
+
+Post the entry that registers you. Repo = proof · Discord = registration. Both before the deadline.
 
 ## Architecture
 
-- `app/` — Loop Theater, ReleaseLab surface, and signed webhook route.
-- `apps/release-lab/` — deterministic release workflow and accessible interactions.
-- `packages/loop-engine/` — contracts, commands, authorization, budgets, sticky-comment renderer.
-- `packages/loop-state/` — legal state transitions and durable transition schema.
-- `.github/workflows/` — quality, dispatch, preview, and production gates.
-- `.proofsmith/` — repository policy and loop budgets.
-- `evidence/` — reserved for sanitized real external artifacts.
+- `app/` — UI + API routes
+- `packages/loop-engine` · `packages/loop-state` — contracts & legal transitions (`BUILDING → SUCCESS` is illegal)
+- `apps/release-lab/` — deterministic reference app for TestSprite plans
+- `.testsprite/plans/` — viewer-approval, exact-once deploy, rollback audit
+- `.proofsmith/` — policy + budgets
+- `@testsprite/testsprite-cli` — official checker CLI pin
 
-## Security model
+## Truth status
 
-Issue text is data, never a command. The webhook requires SHA-256 signature verification and a trusted GitHub author association. Dispatch inputs are allowlisted, merge is human-only, credentials are environment secrets, and external workflows fail closed when prerequisites are absent. See `SECURITY.md`.
+| Claim | Status |
+|-------|--------|
+| Local tests + `next build` | Green (see LOOP.md) |
+| Vercel Next.js deploy | Redeploy latest `main` after vinext fix |
+| GitHub OAuth against production URL | Ready when `APP_URL` + callback match |
+| Live TestSprite cloud pass | Pending first run against deployed URL |
+| Full issue → production seal | Pending first end-to-end banked pass |
 
-## Installation
+Loop Theater on `/` is a **labelled fixture**. Only LOOP.md + real checker artifacts support evidence claims.
 
-1. Create a GitHub App with Issues (read/write), Pull requests (read/write), Checks (read/write), Actions (write), and Contents (read/write only for the worker) permissions.
-2. Subscribe to `issue_comment`, `pull_request`, `check_run`, `workflow_run`, and deployment events as each handler is implemented.
-3. Point the webhook to `/api/github/webhook` and set `GITHUB_WEBHOOK_SECRET`.
-4. Set a short-lived installation token adapter as `PROOFSMITH_GITHUB_TOKEN` for the current prototype.
-5. Configure a tested model provider, `TESTSPRITE_API_KEY`, preview deployment, and production environment.
-6. Install dependencies with `npm ci`, run `npm test`, and start with `npm run dev`.
+## Security
 
-The long-lived token environment variable is a prototype boundary. Production should mint per-installation tokens from a GitHub App private key.
-
-## CI/CD and evidence
-
-`quality.yml` runs lint, strict type checking, unit tests, build, and a basic secret scan. Loop workflows use per-issue concurrency and explicit timeouts. Preview and production verification fail closed until their external contracts are wired. Real artifacts belong under `evidence/<kind>/<run-id>/` with commit SHA and hash metadata.
-
-## Limitations
-
-- Webhook delivery idempotency is process-local; durable GitHub-backed delivery records are still required.
-- GitHub App JWT and installation-token minting are not implemented.
-- Coding provider, branch/PR worker, check-run requested actions, reviewer, and mutation worker are not yet connected.
-- TestSprite invocation remains deliberately unwired until real CLI help is inspected.
-- The deployed Sites experience is private and the story data is a labelled fixture; no public GitHub/TestSprite evidence has been produced yet.
-
-## Hackathon disclosure
-
-The interactive story is a labelled fixture used to demonstrate the intended experience. It is not a pre-recorded run and must not be submitted as verified evidence. Only future linked GitHub, deployment, TestSprite, and human-review artifacts may support hackathon claims.
+Never commit secrets. Use Vercel env / `.env.local` (gitignored). Rotate any keys that appeared in chat logs. See `SECURITY.md`.
 
 ## License
 
-MIT. Third-party packages retain their own licenses; see `THIRD_PARTY_NOTICES.md`.
+MIT. See `THIRD_PARTY_NOTICES.md`.

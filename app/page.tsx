@@ -38,7 +38,8 @@ export default function Home() {
         <a className="wordmark" href="#top" aria-label="Proofsmith home"><span className="brand-mark">P</span><span>PROOFSMITH</span></a>
         <nav aria-label="Primary navigation">
           <a href="/dashboard">Dashboard</a>
-          <a href="/loops">Loops</a>
+          <a href="/loop">Four steps</a>
+          <a href="/loops">Runs</a>
           <a href="/agents">Agents</a>
           <a href="#story">Theater</a>
           <a href="/integrations">Integrations</a>
@@ -54,8 +55,8 @@ export default function Home() {
             <p className="dek">The coding agent does not stop when the code looks finished. It stops when independent evidence proves the issue is resolved.</p>
             <div className="hero-actions">
               <a className="primary-cta" href="/dashboard">Open dashboard <span>→</span></a>
+              <a className="secondary-cta" href="/loop">Four steps</a>
               <a className="secondary-cta" href="/api/auth/github">Connect GitHub</a>
-              <a className="secondary-cta" href="#story">Loop theater</a>
             </div>
           </div>
           <div className="forge" aria-label="Proofsmith closes the engineering loop">
@@ -67,9 +68,26 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="four-steps-home" id="four-steps" aria-labelledby="four-title">
+          <div className="section-kicker"><span>Four steps · one repeats</span><span>Maker · Checker · Maker · Checker</span></div>
+          <div className="theater-heading">
+            <div>
+              <p className="eyebrow">A loop with no real checker hallucinates progress</p>
+              <h2 id="four-title">Write. Verify.<br />Fix. Verify again.</h2>
+            </div>
+            <a className="text-button" href="/loop">Full loop guide <span>→</span></a>
+          </div>
+          <div className="four-grid home-four">
+            <article className="four-card role-maker"><div className="four-card-top"><span>01</span><span className="pill pill-warn">Maker</span></div><h3>Write</h3><p>Your coding agent ships code.</p></article>
+            <article className="four-card role-checker"><div className="four-card-top"><span>02</span><span className="pill pill-ok">Checker</span></div><h3>Verify</h3><p>TestSprite CLI runs real tests on the live app.</p></article>
+            <article className="four-card role-maker"><div className="four-card-top"><span>03</span><span className="pill pill-warn">Maker</span></div><h3>Fix</h3><p>Agent reads the failure bundle and fixes the root cause.</p></article>
+            <article className="four-card role-checker"><div className="four-card-top"><span>04</span><span className="pill pill-ok">Checker</span></div><h3>Verify again</h3><p>Rerun. Pass banks. Then back to the top.</p></article>
+          </div>
+        </section>
+
         <section className="manifesto">
           <p>One-shot agents produce code.</p><p>Proofsmith produces <em>evidence.</em></p>
-          <div className="manifesto-rule"><span>MAKE</span><i /><span>CHECK</span><i /><span>CHALLENGE</span><i /><span>HUMAN</span></div>
+          <div className="manifesto-rule"><span>WRITE</span><i /><span>VERIFY</span><i /><span>FIX</span><i /><span>VERIFY AGAIN</span></div>
         </section>
 
         <section className="theater" id="story" aria-labelledby="story-title">

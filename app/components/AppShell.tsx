@@ -6,7 +6,8 @@ import { GitHubIdentity } from "@/app/GitHubIdentity";
 
 const links = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/loops", label: "Loops" },
+  { href: "/loop", label: "Four steps" },
+  { href: "/loops", label: "Runs" },
   { href: "/agents", label: "Agents" },
   { href: "/integrations", label: "Integrations" },
   { href: "/settings", label: "Settings" },
