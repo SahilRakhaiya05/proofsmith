@@ -19,8 +19,6 @@
 
 ---
 
-# Proofsmith — A to Z
-
 Proofsmith is a **GitHub-native autonomous engineering loop**. A coding agent ships the smallest fix; an **independent** checker runs real tests against the **live** deployed URL; failures feed the maker; passes bank into evidence. The loop does not stop when the code “looks done.”
 
 > A loop with no real checker doesn't fail loudly. It hallucinates progress.
