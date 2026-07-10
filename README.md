@@ -8,7 +8,7 @@
   <a href="https://github.com/SahilRakhaiya05/proofsmith">GitHub</a> ·
   <a href="./docs/ARCHITECTURE.md">Architecture</a> ·
   <a href="./LOOP.md">LOOP.md</a> ·
-  <a href="./SUBMISSION.md">Submit</a>
+
 </p>
 
 <p align="center">
